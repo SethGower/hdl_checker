@@ -267,7 +267,7 @@ class _LspHelper(unittest2.TestCase):
                     text="testing clk en gen",
                     filename=source,
                     line_number=0,
-                    column_number=0,
+                    column_start=0,
                 ),
             ],
         )
@@ -283,7 +283,7 @@ class _LspHelper(unittest2.TestCase):
                     text="testing clk en gen",
                     filename=source,
                     line_number=0,
-                    column_number=0,
+                    column_start=0,
                 ),
             ],
         )
@@ -303,7 +303,7 @@ class _LspHelper(unittest2.TestCase):
                     text="post change diag",
                     filename=source,
                     line_number=1,
-                    column_number=2,
+                    column_start=2,
                 ),
             ],
         )

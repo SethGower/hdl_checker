@@ -60,7 +60,8 @@ class CheckerDiagnostic(HashableByKey):  # pylint: disable=too-many-instance-att
         checker=None,  # type: Optional[str]
         filename=None,  # type: Optional[Path]
         line_number=None,  # type: Optional[int]
-        column_number=None,  # type: Optional[int]
+        column_start=None,  # type: Optional[int]
+        column_end=None,  # type: Optional[int]
         error_code=None,
         severity=None,
     ):
@@ -75,7 +76,8 @@ class CheckerDiagnostic(HashableByKey):  # pylint: disable=too-many-instance-att
 
         # Modifiable with rules
         self._line_number = None if line_number is None else int(line_number)
-        self._column = None if column_number is None else int(column_number)
+        self._column_start = None if column_start is None else int(column_start)
+        self._column_end = None if column_end is None else int(column_end)
         self._severity = DiagType.ERROR if severity is None else severity
 
     def copy(self, **kwargs):
@@ -88,8 +90,11 @@ class CheckerDiagnostic(HashableByKey):  # pylint: disable=too-many-instance-att
             text=kwargs.get("text", getattr(self, "text", None)),
             filename=kwargs.get("filename", getattr(self, "filename", None)),
             line_number=kwargs.get("line_number", getattr(self, "line_number", None)),
-            column_number=kwargs.get(
-                "column_number", getattr(self, "column_number", None)
+            column_start=kwargs.get(
+                "column_start", getattr(self, "column_start", None)
+            ),
+            column_end=kwargs.get(
+                "column_end", getattr(self, "column_end", None)
             ),
             error_code=kwargs.get("error_code", getattr(self, "error_code", None)),
             severity=kwargs.get("severity", getattr(self, "severity", None)),
@@ -97,13 +102,14 @@ class CheckerDiagnostic(HashableByKey):  # pylint: disable=too-many-instance-att
 
     def __repr__(self):
         return (
-            '{}(checker="{}", filename={}, line_number={}, column_number={}, '
-            "error_code={}, severity={}, text={})".format(
+            '{}(checker="{}", filename={}, line_number={}, column_start={}, '
+            "column_end={}, error_code={}, severity={}, text={})".format(
                 self.__class__.__name__,
                 repr(self.checker),
                 repr(self.filename),
                 repr(self.line_number),
-                repr(self.column_number),
+                repr(self.column_start),
+                repr(self.column_end),
                 repr(self.error_code),
                 repr(self.severity),
                 repr(self.text),
@@ -115,7 +121,8 @@ class CheckerDiagnostic(HashableByKey):  # pylint: disable=too-many-instance-att
         return (
             self.filename,
             self.checker,
-            self.column_number,
+            self.column_start,
+            self.column_end,
             self.error_code,
             self.line_number,
             self.severity,
@@ -132,7 +139,8 @@ class CheckerDiagnostic(HashableByKey):  # pylint: disable=too-many-instance-att
             - error_code: (string)
             - text: (string)
             - line_number: (int or None)
-            - column_number: (int or None)
+            - column_start: (int or None)
+            - column_end: (int or None)
             - severity: (string) Values taken from DiagType
         """
         return {
@@ -141,7 +149,8 @@ class CheckerDiagnostic(HashableByKey):  # pylint: disable=too-many-instance-att
             "error_code": self.error_code,
             "text": self.text,
             "line_number": self.line_number,
-            "column_number": self.column_number,
+            "column_start": self.column_start,
+            "column_end": self.column_end,
             "severity": self.severity,
         }
 
@@ -154,7 +163,8 @@ class CheckerDiagnostic(HashableByKey):  # pylint: disable=too-many-instance-att
             error_code=state["error_code"],
             text=state["text"],
             line_number=state["line_number"],
-            column_number=state["column_number"],
+            column_start=state["column_start"],
+            column_end=state["column_end"],
             severity=state["severity"],
         )
 
@@ -186,11 +196,18 @@ class CheckerDiagnostic(HashableByKey):  # pylint: disable=too-many-instance-att
         return self._line_number
 
     @property
-    def column_number(self):
-        "Diagnostics column_number"
-        if self._column is not None:
-            return int(self._column)
-        return self._column
+    def column_start(self):
+        "Diagnostics column_start"
+        if self._column_start is not None:
+            return int(self._column_start)
+        return self._column_start
+
+    @property
+    def column_end(self):
+        "Diagnostics column_end"
+        if self._column_end is not None:
+            return int(self._column_end)
+        return self._column_end
 
     @property
     def severity(self):
@@ -222,7 +239,8 @@ class StaticCheckerDiag(CheckerDiagnostic):
         severity,
         filename=None,
         line_number=None,
-        column_number=None,
+        column_start=None,
+        column_end=None,
         error_code=None,
     ):
 
@@ -238,7 +256,8 @@ class StaticCheckerDiag(CheckerDiagnostic):
             severity=severity,
             filename=filename,
             line_number=line_number,
-            column_number=column_number,
+            column_start=column_start,
+            column_end=column_end,
             error_code=error_code,
         )
 
@@ -246,10 +265,12 @@ class StaticCheckerDiag(CheckerDiagnostic):
 class LibraryShouldBeOmited(StaticCheckerDiag):
     "Library declaration should be ommited"
 
-    def __init__(self, library, filename=None, line_number=None, column_number=None):
+    def __init__(self, library, filename=None, line_number=None,
+            column_start=None, column_end=None):
         super(LibraryShouldBeOmited, self).__init__(
             line_number=line_number,
-            column_number=column_number,
+            column_start=column_start,
+            column_end=column_end,
             filename=filename,
             severity=DiagType.STYLE_INFO,
             text="Declaration of library '{library}' can be omitted".format(
@@ -265,14 +286,16 @@ class ObjectIsNeverUsed(StaticCheckerDiag):
         self,
         filename=None,
         line_number=None,
-        column_number=None,
+        column_start=None,
+        column_end=None,
         object_name=None,
         object_type=None,
     ):
         super(ObjectIsNeverUsed, self).__init__(
             filename=filename,
             line_number=line_number,
-            column_number=column_number,
+            column_start=column_start,
+            column_end=column_end,
             severity=DiagType.STYLE_WARNING,
             text="{} '{}' is never used".format(
                 str(object_type).capitalize(), object_name
@@ -302,7 +325,7 @@ class BuilderDiag(CheckerDiagnostic):
             filename=filename,
             severity=severity,
             line_number=line_number,
-            column_number=column_number,
+            column_start=column_number,
             error_code=error_code,
         )
 
@@ -358,7 +381,7 @@ class DependencyNotUnique(CheckerDiagnostic):
             filename=filename,
             severity=DiagType.STYLE_WARNING,
             line_number=line_number,
-            column_number=column_number,
+            column_start=column_number,
             text=text,
         )
 
@@ -402,6 +425,6 @@ class UnresolvedDependency(CheckerDiagnostic):
             filename=dependency.owner,
             severity=DiagType.STYLE_ERROR,
             line_number=location.line,
-            column_number=location.column,
+            column_start=location.column,
             text="Unable to resolve '{}' to a path".format(reference),
         )

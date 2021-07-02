@@ -67,7 +67,7 @@ class TestCheckerDiagToLspDict(unittest2.TestCase):
                 text="some diag",
                 filename=Path("filename"),
                 line_number=0,
-                column_number=0,
+                column_start=0,
                 error_code="error code",
                 severity=diag_type,
             )

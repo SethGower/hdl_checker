@@ -117,9 +117,9 @@ def checkerDiagToLspDict(diag: CheckerDiagnostic) -> Diagnostic:
     return Diagnostic(
         range=Range(
             start=Position(
-                line=diag.line_number or 0, character=diag.column_number or 0
+                line=diag.line_number or 0, character=diag.column_start or 0
             ),
-            end=Position(line=diag.line_number or 0, character=diag.column_number or 0),
+            end=Position(line=diag.line_number or 0, character=diag.column_end or 0),
         ),
         message=diag.text,
         severity=_translateSeverity(diag.severity),

@@ -485,7 +485,7 @@ def toCheckerDiagnostic(uri: str, diags: Any) -> Iterable[CheckerDiagnostic]:
             checker=diag.source,
             filename=uris.to_fs_path(uri),
             line_number=diag.range.start.line,
-            column_number=diag.range.start.character,
+            column_start=diag.range.start.character,
             error_code=diag.code,
             severity="Error",
         )

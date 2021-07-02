@@ -156,7 +156,7 @@ def _findObjects(lines):
                     yield name, {
                         "lnum": lnum,
                         "start": start + submatch.start(submatch.lastindex),
-                        "end": end + submatch.start(submatch.lastindex),
+                        "end": end + submatch.start(submatch.lastindex) - 1,
                         "type": key,
                     }
         lnum += 1
@@ -212,7 +212,8 @@ def _getCommentTags(lines):
             result += [
                 StaticCheckerDiag(
                     line_number=lnum - 1,
-                    column_number=match.start(match.lastindex - 1),
+                    column_start=match.start(match.lastindex - 1),
+                    column_end=match.start(match.lastindex - 1) + len(_dict["tag"]),
                     severity=DiagType.STYLE_INFO,
                     text="%s: %s" % (_dict["tag"].upper(), _dict["text"]),
                 )
@@ -232,7 +233,8 @@ def _getMiscChecks(objects):
             continue
         if library == "work":
             yield LibraryShouldBeOmited(
-                line_number=obj["lnum"], column_number=obj["start"], library=library
+                line_number=obj["lnum"], column_start=obj["start"],
+                column_end=obj["start"] + len(library), library=library
             )
 
 
@@ -248,7 +250,8 @@ def getStaticMessages(lines):
         result += [
             ObjectIsNeverUsed(
                 line_number=obj_dict["lnum"],
-                column_number=obj_dict["start"],
+                column_start=obj_dict["start"],
+                column_end=obj_dict["end"],
                 object_type=obj_dict["type"],
                 object_name=_object,
             )
