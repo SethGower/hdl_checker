@@ -38,7 +38,8 @@ class MSim(BaseBuilder):
     # Implementation of abstract class properties
     builder_name = "msim"
     file_types = {FileType.vhdl, FileType.verilog, FileType.systemverilog}
-
+# ^\*\*\s*(?P<sev>[WE])\w+\s*(:?\(suppressible\))?:\s*(:?(:?\s*\[\d+\])?\s*(?P<filename>.*(?=\(\d+\)))\((?P<line_number>\d+)\):|\(vcom-\d+\))?\s*(?P<error_message>.*)\s*
+#^.*"(?P<token>.*)".*$
     # MSim specific class properties
     _stdout_message_scanner = re.compile(
         r"""^\*\*\s*
@@ -140,6 +141,13 @@ class MSim(BaseBuilder):
             filename = info.get("filename")
             line_number = info.get("line_number")
             column_number = info.get("column_number")
+            if column_number is None:
+                if len(re.findall(r"\".*\"", info["error_message"])) != 0:
+                    token = re.findall(r"^.*\"(?P<token>.*)\".*$",
+                            info["error_message"])
+                    column_number = line.find(token[0])
+                    #col_end = column_number + len(token)
+
 
             severity = None
             if info.get("severity", None) in ("W", "e"):
