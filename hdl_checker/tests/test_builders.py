@@ -354,7 +354,7 @@ class TestBuilder(TestCase):
                 builder_name=self.builder_name,
                 filename=Path(path),
                 line_number=10,
-                column_number=34,
+                column_start=34,
                 severity=DiagType.ERROR,
                 text="extra ';' at end of interface list",
             )
@@ -504,7 +504,7 @@ class TestBuilder(TestCase):
                         builder_name=self.builder_name,
                         text='no declaration for "some_lib"',
                         line_number=3,
-                        column_number=4,
+                        column_start=4,
                         severity=DiagType.ERROR,
                     ),
                     BuilderDiag(
@@ -512,7 +512,7 @@ class TestBuilder(TestCase):
                         builder_name=self.builder_name,
                         text="entity 'source_with_error' was not analysed",
                         line_number=17,
-                        column_number=34,
+                        column_start=34,
                         severity=DiagType.ERROR,
                     ),
                 }

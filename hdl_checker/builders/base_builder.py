@@ -190,7 +190,7 @@ class BaseBuilder(object):  # pylint: disable=useless-object-inheritance
         """
 
     @abc.abstractmethod
-    def _makeRecords(self, line):
+    def _makeRecords(self, line, path):
         """
         Static method that converts a string into a dict that has
         elements identifying its fields
@@ -332,7 +332,7 @@ class BaseBuilder(object):  # pylint: disable=useless-object-inheritance
             if self._shouldIgnoreLine(line):
                 continue
 
-            for record in self._makeRecords(line):
+            for record in self._makeRecords(line, path):
                 try:
                     # If no filename is set, assume it's for the current path
                     if record.filename is None:

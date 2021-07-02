@@ -38,8 +38,6 @@ class MSim(BaseBuilder):
     # Implementation of abstract class properties
     builder_name = "msim"
     file_types = {FileType.vhdl, FileType.verilog, FileType.systemverilog}
-# ^\*\*\s*(?P<sev>[WE])\w+\s*(:?\(suppressible\))?:\s*(:?(:?\s*\[\d+\])?\s*(?P<filename>.*(?=\(\d+\)))\((?P<line_number>\d+)\):|\(vcom-\d+\))?\s*(?P<error_message>.*)\s*
-#^.*"(?P<token>.*)".*$
     # MSim specific class properties
     _stdout_message_scanner = re.compile(
         r"""^\*\*\s*
@@ -122,8 +120,10 @@ class MSim(BaseBuilder):
         if not self._iniFileExists():
             self._createIniFile()
 
-    def _makeRecords(self, line):
-        # type: (str) -> Iterable[BuilderDiag]
+    def _makeRecords(self, line, path):
+        # type: (str, Path) -> Iterable[BuilderDiag]
+        with open(str(path), 'r') as f:
+            lines = f.readlines()
         for match in self._stdout_message_scanner(line):  # type: ignore
             info = match.groupdict()
 
@@ -140,13 +140,23 @@ class MSim(BaseBuilder):
 
             filename = info.get("filename")
             line_number = info.get("line_number")
-            column_number = info.get("column_number")
-            if column_number is None:
+            column_start = info.get("column_number")
+            column_end = None;
+            token = None
+            if column_start is None and line_number is not None:
                 if len(re.findall(r"\".*\"", info["error_message"])) != 0:
                     token = re.findall(r"^.*\"(?P<token>.*)\".*$",
-                            info["error_message"])
-                    column_number = line.find(token[0])
-                    #col_end = column_number + len(token)
+                            info["error_message"])[0]
+                    # adds 1 to make it 1 based indexing, so it can then be
+                    # subtraced in the yield.
+                    column_start = lines[int(line_number)-1].find(token) + 1
+                    self._logger.debug("Got token: %s", token)
+                    self._logger.debug("Source Line: %s",
+                            lines[int(line_number)-1])
+                    column_end = column_start + len(token)
+                    self._logger.debug("Columns %d to %d", column_start,
+                            column_end)
+                    self._logger.debug("vcom output: \"%s\"", line)
 
 
             severity = None
@@ -162,7 +172,8 @@ class MSim(BaseBuilder):
                 severity=severity,
                 filename=None if filename is None else Path(filename),
                 line_number=None if line_number is None else int(line_number) - 1,
-                column_number=None if column_number is None else int(column_number) - 1,
+                column_start=None if column_start is None else int(column_start) - 1,
+                column_end=None if column_end is None else int(column_end) - 1,
             )
 
     def _checkEnvironment(self):

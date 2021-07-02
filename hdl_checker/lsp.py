@@ -119,7 +119,11 @@ def checkerDiagToLspDict(diag: CheckerDiagnostic) -> Diagnostic:
             start=Position(
                 line=diag.line_number or 0, character=diag.column_start or 0
             ),
-            end=Position(line=diag.line_number or 0, character=diag.column_end or 0),
+            # the LSP spec dictates that the columns are exclusively addressed.
+            # So if the end column is None for some reason, set it to the start
+            # + 1. If both are None then they become 0 and 1 respectively
+            end=Position(line=diag.line_number or 0, character=diag.column_end
+                or diag.column_start + 1 or 1),
         ),
         message=diag.text,
         severity=_translateSeverity(diag.severity),

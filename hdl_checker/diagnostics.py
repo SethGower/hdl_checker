@@ -315,7 +315,8 @@ class BuilderDiag(CheckerDiagnostic):
         text,
         filename=None,
         line_number=None,
-        column_number=None,
+        column_start=None,
+        column_end=None,
         error_code=None,
         severity=None,
     ):
@@ -325,7 +326,8 @@ class BuilderDiag(CheckerDiagnostic):
             filename=filename,
             severity=severity,
             line_number=line_number,
-            column_start=column_number,
+            column_start=column_start,
+            column_end=column_end,
             error_code=error_code,
         )
 

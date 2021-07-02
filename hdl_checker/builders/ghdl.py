@@ -77,8 +77,8 @@ class GHDL(BaseBuilder):
         self._version = ""
         super(GHDL, self).__init__(*args, **kwargs)
 
-    def _makeRecords(self, line):
-        # type: (str) -> Iterable[BuilderDiag]
+    def _makeRecords(self, line, path):
+        # type: (str, Path) -> Iterable[BuilderDiag]
         for match in GHDL._stdout_message_parser(line):
             info = match.groupdict()
 
@@ -92,7 +92,7 @@ class GHDL(BaseBuilder):
                 severity=DiagType.WARNING if info["is_warning"] else DiagType.ERROR,
                 filename=None if filename is None else Path(filename),
                 line_number=None if line_number is None else int(line_number) - 1,
-                column_number=None if column_number is None else int(column_number) - 1,
+                column_start=None if column_number is None else int(column_number) - 1,
             )
 
     def _checkEnvironment(self):
