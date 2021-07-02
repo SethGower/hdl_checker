@@ -84,7 +84,22 @@ class GHDL(BaseBuilder):
 
             filename = info.get("filename")
             line_number = info.get("line_number")
-            column_number = info.get("column_number")
+            column_start = info.get("column_number")
+            column_end = None
+
+            if column_start is not None and line_number is not None:
+                if len(re.findall(r"\".*\"", info["error_message"])) != 0:
+                    # re to find the token that is between quotes in the error
+                    # message
+                    token = re.findall(r"^.*\"(?P<token>.*)\".*$",
+                            info["error_message"])[0]
+                    # adds 1 to make it 1 based indexing, so it can then be
+                    # subtraced in the yield.
+                    column_end = int(column_start) + len(token)
+                    self._logger.debug("Columns %d to %d", column_start,
+                            column_end)
+                    self._logger.debug("vcom output: \"%s\"", line)
+
 
             yield BuilderDiag(
                 builder_name=self.builder_name,
@@ -92,7 +107,8 @@ class GHDL(BaseBuilder):
                 severity=DiagType.WARNING if info["is_warning"] else DiagType.ERROR,
                 filename=None if filename is None else Path(filename),
                 line_number=None if line_number is None else int(line_number) - 1,
-                column_start=None if column_number is None else int(column_number) - 1,
+                column_start=None if column_start is None else int(column_start) - 1,
+                column_end=None if column_end is None else int(column_end) - 1,
             )
 
     def _checkEnvironment(self):
